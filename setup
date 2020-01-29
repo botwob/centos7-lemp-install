@@ -1,8 +1,13 @@
-#!bin/bash
-if [ $EUID != 0 ]; then
-    sudo "$0" "$@"
-    exit $?
-fi
-
-ls -l /root
-done
+yum install epel-release
+yum install nginx
+firewall-cmd --permanent --zone=public --add-service=http
+firewall-cmd --permanent --zone=public --add-service=https
+firewall-cmd --reload
+systemctl enable nginx
+systemctl start nginx
+yum install mariadb-server
+systemctl enable mariadb
+systemctl start mariadb
+mysql_secure_installation
+yum install php php-mysql php-fpm
+cp /etc/php.ini /etc/php.ini.backup
