@@ -1,0 +1,15 @@
+yum install epel-release -y
+yum update -y
+yum install nginx -y
+firewall-cmd --permanent --zone=public --add-service=http
+firewall-cmd --permanent --zone=public --add-service=https
+firewall-cmd --reload
+systemctl enable nginx 
+systemctl start nginx
+systemctl status nginx
+yum install mariadb-server -y
+systemctl enable mariadb 
+systemctl start mariadb
+mysql_secure_installation
+yum install php php-mysql php-fpm -y
+cp /etc/php.ini /etc/php.ini.backup
