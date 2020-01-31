@@ -1,25 +1,44 @@
-yum install epel-release -y
-yum update -y
-yum install nginx -y
-firewall-cmd --permanent --zone=public --add-service=http
-firewall-cmd --permanent --zone=public --add-service=https
-firewall-cmd --reload
-systemctl enable nginx 
-systemctl start nginx
-systemctl status nginx
-yum install mariadb-server -y
-systemctl enable mariadb 
-systemctl start mariadb
-mysql_secure_installation
-yum install php php-mysql php-fpm -y
-cp /etc/php.ini /etc/php.ini.backup
-sed -i -e 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php.ini
-cp /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.conf.backup
-sed -i -e 's/listen =.*/listen = \/var\/run\/php-fpm\/php-fpm.sock/g' /etc/php-fpm.d/www.conf
-sed -i -e 's/listen.owner =.*/listen.owner = nobody/g' /etc/php-fpm.d/www.conf
-sed -i -e 's/listen.group =.*/listen.group = nobody/g' /etc/php-fpm.d/www.conf
-sed -i -e 's/user =.*/user = nginx/g" /etc/php-fpm.d/www.conf
-sed -i -e 's/group =.*/group = nginx/g" /etc/php-fpm.d/www.conf
-systemctl start php-fpm
-systemctl enable php-fpm
+#!/bin/bash
 
+#updating
+sudo yum install epel-release -y
+sudo yum update -y
+
+#installing nginx and opening firewall to appropriate port
+sudo yum install nginx -y
+sudo firewall-cmd --permanent --zone=public --add-service=http
+sudo firewall-cmd --permanent --zone=public --add-service=https
+sudo firewall-cmd --reload
+sudo systemctl enable nginx 
+sudo systemctl start nginx
+sudo systemctl status nginx
+
+#setting up mariadb
+sudo yum install mariadb-server -y
+sudo systemctl enable mariadb 
+sudo systemctl start mariadb
+sudo mysql_secure_installation
+
+#setting up php
+sudo yum install php php-mysql php-fpm -y
+sudo cp /etc/php.ini /etc/php.ini.backup
+sudo sed -i -e 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php.ini
+sudo cp /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.conf.backup
+sudo sed -i -e 's/listen =.*/listen = \/var\/run\/php-fpm\/php-fpm.sock/g' /etc/php-fpm.d/www.conf
+sudo sed -i -e 's/listen.owner =.*/listen.owner = nobody/g' /etc/php-fpm.d/www.conf
+sudo sed -i -e 's/listen.group =.*/listen.group = nobody/g' /etc/php-fpm.d/www.conf
+sudo sed -i -e 's/user = apache/user = nginx/g' /etc/php-fpm.d/www.conf
+sudo sed -i -e 's/group = apache/group = nginx/g' /etc/php-fpm.d/www.conf
+sudo systemctl start php-fpm
+sudo systemctl enable php-fpm
+
+#setting up base domain for nginx
+read -p "Enter your domain name eg. example.com: " domain
+echo "Creating files at \/var\/www\/$domain/"
+sudo mkdir -p /var/www/$domain/
+sudo mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.backup
+sudo mv example.conf /etc/nginx/conf.d/$domain.conf
+sudo sed -i -e 's/example.com/$domain/g' /etc/nginx/conf.d/$domain.conf
+echo "base files created, restarting nginx and php, reload website to check"
+sudo systemctl restart php-fpm
+sudo nginx -s reload
